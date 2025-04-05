@@ -4,15 +4,12 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Menu, X, Moon, Sun, ChevronDown } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const pathname = usePathname()
   const supabase = createClientComponentClient()
 
@@ -22,48 +19,9 @@ export default function Navbar() {
       const { data: { session } } = await supabase.auth.getSession()
       setIsLoggedIn(!!session)
     }
-    
+
     checkUser()
   }, [supabase.auth])
-
-  // Detectar rolagem para mudar o estilo da navbar
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true)
-      } else {
-        setIsScrolled(false)
-      }
-    }
-
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  // Detectar preferência de tema
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('theme')
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      
-      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-        setIsDarkMode(true)
-        document.documentElement.classList.add('dark')
-      }
-    }
-  }, [])
-
-  // Alternar tema claro/escuro
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode)
-    if (isDarkMode) {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    } else {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    }
-  }
 
   // Links de navegação
   const navLinks = [
@@ -74,97 +32,44 @@ export default function Navbar() {
   ]
 
   return (
-    <nav 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-md py-2' 
-          : 'bg-transparent py-4'
-      }`}
-    >
+    <header className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between h-16 items-center">
           {/* Logo */}
-          <div className="flex items-center">
+          <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+              <span className="text-xl font-bold text-purple-600">
                 CasalResolve
               </span>
             </Link>
           </div>
 
           {/* Links de navegação - Desktop */}
-          <div className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:ml-6 md:flex md:space-x-8">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`text-sm font-medium transition-colors hover:text-purple-600 ${
-                  pathname === link.href 
-                    ? 'text-purple-600' 
-                    : 'text-gray-700 dark:text-gray-200'
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  pathname === link.href
+                    ? 'border-purple-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
               >
                 {link.name}
               </Link>
             ))}
-          </div>
+          </nav>
 
           {/* Botões de ação - Desktop */}
           <div className="hidden md:flex items-center space-x-4">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label={isDarkMode ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
-            >
-              {isDarkMode ? (
-                <Sun className="h-5 w-5 text-gray-700 dark:text-gray-200" />
-              ) : (
-                <Moon className="h-5 w-5 text-gray-700 dark:text-gray-200" />
-              )}
-            </button>
-
             {isLoggedIn ? (
-              <div className="relative">
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center space-x-1 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
-                >
-                  <span>Minha Conta</span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 py-2 bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                    <Link
-                      href="/dashboard"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      onClick={() => setIsDropdownOpen(false)}
-                    >
-                      Dashboard
-                    </Link>
-                    <Link
-                      href="/dashboard/settings"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      onClick={() => setIsDropdownOpen(false)}
-                    >
-                      Configurações
-                    </Link>
-                    <button
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      onClick={() => {
-                        supabase.auth.signOut()
-                        setIsDropdownOpen(false)
-                        window.location.href = '/'
-                      }}
-                    >
-                      Sair
-                    </button>
-                  </div>
-                )}
-              </div>
+              <Button asChild className="bg-purple-600 hover:bg-purple-700">
+                <Link href="/dashboard">Meu Dashboard</Link>
+              </Button>
             ) : (
               <>
-                <Button asChild variant="ghost">
+                <Button asChild variant="outline">
                   <Link href="/auth/login">Entrar</Link>
                 </Button>
                 <Button asChild className="bg-purple-600 hover:bg-purple-700">
@@ -175,28 +80,17 @@ export default function Navbar() {
           </div>
 
           {/* Menu mobile */}
-          <div className="md:hidden flex items-center space-x-2">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label={isDarkMode ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
-            >
-              {isDarkMode ? (
-                <Sun className="h-5 w-5 text-gray-700 dark:text-gray-200" />
-              ) : (
-                <Moon className="h-5 w-5 text-gray-700 dark:text-gray-200" />
-              )}
-            </button>
-            
+          <div className="-mr-2 flex items-center md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="Menu principal"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500"
+              aria-expanded="false"
             >
+              <span className="sr-only">Abrir menu principal</span>
               {isMenuOpen ? (
-                <X className="h-6 w-6" />
+                <X className="block h-6 w-6" aria-hidden="true" />
               ) : (
-                <Menu className="h-6 w-6" />
+                <Menu className="block h-6 w-6" aria-hidden="true" />
               )}
             </button>
           </div>
@@ -205,56 +99,35 @@ export default function Navbar() {
 
       {/* Menu mobile expandido */}
       {isMenuOpen && (
-        <div className="md:hidden bg-white dark:bg-gray-900 shadow-lg">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <div className="md:hidden">
+          <div className="pt-2 pb-3 space-y-1">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
                   pathname === link.href
-                    ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
-                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    ? 'bg-purple-50 border-purple-500 text-purple-700'
+                    : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 {link.name}
               </Link>
             ))}
-            
-            {!isLoggedIn ? (
-              <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex items-center px-3 space-x-2">
-                  <Button asChild variant="ghost" className="w-full justify-center">
-                    <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
-                      Entrar
-                    </Link>
-                  </Button>
-                  <Button asChild className="w-full justify-center bg-purple-600 hover:bg-purple-700">
-                    <Link href="/auth/signup" onClick={() => setIsMenuOpen(false)}>
-                      Criar Conta
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">
+          </div>
+          <div className="pt-4 pb-3 border-t border-gray-200">
+            {isLoggedIn ? (
+              <div className="space-y-1">
                 <Link
                   href="/dashboard"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/dashboard/settings"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Configurações
+                  Meu Dashboard
                 </Link>
                 <button
-                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
                   onClick={() => {
                     supabase.auth.signOut()
                     setIsMenuOpen(false)
@@ -264,10 +137,23 @@ export default function Navbar() {
                   Sair
                 </button>
               </div>
+            ) : (
+              <div className="space-y-1 px-4 flex flex-col">
+                <Button asChild variant="outline" className="mb-2">
+                  <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
+                    Entrar
+                  </Link>
+                </Button>
+                <Button asChild className="bg-purple-600 hover:bg-purple-700">
+                  <Link href="/auth/signup" onClick={() => setIsMenuOpen(false)}>
+                    Criar Conta
+                  </Link>
+                </Button>
+              </div>
             )}
           </div>
         </div>
       )}
-    </nav>
+    </header>
   )
 }

@@ -3,14 +3,12 @@ import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-        </div>
+    <div className="py-6 px-4 sm:px-6 lg:px-8">
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h1>
+        <p className="mt-2 text-sm text-gray-600">Bem-vindo ao seu painel de controle.</p>
       </header>
       <main>
-        <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
           {/* Resumo */}
           <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             <div className="overflow-hidden rounded-lg bg-white shadow">
@@ -100,7 +98,7 @@ export default function DashboardPage() {
             <h2 className="text-lg font-medium text-gray-900 mb-4">Ações Rápidas</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Button asChild className="bg-purple-600 hover:bg-purple-700">
-                <Link href="/dashboard/discussions/new">
+                <Link href="/dashboard/create-case">
                   Iniciar Nova Discussão
                 </Link>
               </Button>
@@ -231,7 +229,7 @@ export default function DashboardPage() {
                 <h3 className="text-base font-semibold leading-6 text-gray-900">Melhore sua comunicação</h3>
                 <div className="mt-2 max-w-xl text-sm text-gray-500">
                   <p>
-                    Baseado nas suas discussões recentes, notamos que a comunicação sobre expectativas poderia ser melhorada. 
+                    Baseado nas suas discussões recentes, notamos que a comunicação sobre expectativas poderia ser melhorada.
                     Aqui estão algumas sugestões:
                   </p>
                 </div>
@@ -252,7 +250,6 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-        </div>
       </main>
     </div>
   );

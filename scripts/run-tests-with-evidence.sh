@@ -8,8 +8,8 @@ NC='\033[0m' # No Color
 
 echo -e "${YELLOW}Iniciando testes end-to-end com geração de evidências...${NC}"
 
-# Criar diretórios se não existirem
-mkdir -p test-results/artifacts test-results/html-report test-evidence
+# Configurar ambiente de testes
+./scripts/setup-test-env.sh
 
 # Limpar diretório de evidências
 echo -e "${YELLOW}Limpando diretório de evidências anteriores...${NC}"

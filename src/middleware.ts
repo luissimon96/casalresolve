@@ -1,5 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { createMockAuthClient } from './lib/auth/mock-auth'
+
+// Verificar se estamos em modo de desenvolvimento
+const isDevelopmentMode = process.env.SUPABASE_DEV_MODE === 'true'
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -8,51 +12,60 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
+  let supabase;
+
+  // Se estamos em modo de desenvolvimento, usar mock
+  if (isDevelopmentMode) {
+    console.log('Middleware: Usando cliente Supabase simulado')
+    supabase = createMockAuthClient()
+  } else {
+    // Caso contrário, usar cliente Supabase real
+    supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value
+          },
+          set(name: string, value: string, options: any) {
+            request.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            })
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+          },
+          remove(name: string, options: any) {
+            request.cookies.set({
+              name,
+              value: '',
+              ...options,
+            })
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            })
+            response.cookies.set({
+              name,
+              value: '',
+              ...options,
+            })
+          },
         },
-        set(name: string, value: string, options: any) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: any) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-        },
-      },
-    }
-  )
+      }
+    )
+  }
 
   // Refresh session if expired
   await supabase.auth.getSession()
@@ -60,8 +73,8 @@ export async function middleware(request: NextRequest) {
   // Protected routes
   const { pathname } = request.nextUrl
   const { data: { session } } = await supabase.auth.getSession()
-  const publicRoutes = ['/', '/auth/login', '/auth/signup', '/pricing']
-  const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/api/')
+  const publicRoutes = ['/', '/auth/login', '/auth/signup', '/pricing', '/auth/callback']
+  const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/api/') || pathname.includes('_next')
 
   if (!session && !isPublicRoute) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
